@@ -1,0 +1,21 @@
+Etapa 1: cadastro
+
+Um programa que cadastra resíduos eletrônicos. Cada registro precisa de três campos: código numérico, nome/tipo do resíduo e quantidade. Tem que ter pelo menos 10 registros, e a estrutura de dados é livre (lista, mapa, array, o que o grupo preferir).
+
+Etapa 2: classificação com módulo
+
+Para cada registro, você calcula h(k) = k mod 5, onde k é o código. O resto define a categoria:
+Resto	Categoria
+0	Computadores e notebooks
+1	Celulares e tablets
+2	Cabos e periféricos
+3	Baterias e pilhas
+4	Outros eletrônicos
+
+A saída deve mostrar código, classe calculada e categoria, igual ao exemplo: 1027 mod 5 = 2, então "Cabos e periféricos".
+
+A pegadinha
+
+O código 1027 no exemplo de cadastro é um Notebook, mas o cálculo joga ele em "Cabos e periféricos". Isso é proposital. O aviso de "Atenção" no final pede que o grupo discuta exatamente isso: classificar pelo código é só exercício de aritmética modular, e no app real a categoria deveria vir do tipo de material informado pelo usuário. Vale deixar essa discussão registrada na entrega, porque o nome da missão é "Auditoria Lógica dos Requisitos".
+
+O enunciado também cita primos, fatoração, MDC, MMC e hashing, que não aparecem nessas duas etapas, então devem existir mais páginas com as etapas seguintes. Se tiver, manda que eu te explico o resto.

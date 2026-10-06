@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EcoDescarte</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="topo">
+        <h1>EcoDescarte</h1>
+        <p>Cadastro e classificação de resíduos eletrônicos para descarte.</p>
+    </header>
+
+    <main>
+        <section class="cartao">
+            <h2>Cadastrar resíduo</h2>
+            <form id="form-residuo" novalidate>
+                <label>
+                    Código
+                    <input type="number" id="codigo" name="codigo" min="1" step="1" inputmode="numeric" placeholder="1027" required>
+                </label>
+                <label>
+                    Nome ou tipo
+                    <input type="text" id="nome" name="nome" maxlength="100" placeholder="Notebook" required>
+                </label>
+                <label>
+                    Quantidade
+                    <input type="number" id="quantidade" name="quantidade" min="1" step="1" inputmode="numeric" placeholder="2" required>
+                </label>
+                <button type="submit">Cadastrar</button>
+            </form>
+            <p id="previa" class="previa" hidden></p>
+            <p id="mensagem" class="mensagem" role="status" hidden></p>
+        </section>
+
+        <section class="cartao">
+            <div class="cabecalho-lista">
+                <h2>Resíduos cadastrados</h2>
+                <span id="total" class="total"></span>
+            </div>
+            <p class="explicacao">
+                A classe é calculada por <strong>h(k) = k mod 5</strong>, em que k é o código do registro.
+            </p>
+            <div class="rolagem">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="numero">Código</th>
+                            <th>Resíduo</th>
+                            <th class="numero">Quantidade</th>
+                            <th class="numero">Classe</th>
+                            <th>Categoria</th>
+                            <th><span class="so-leitor">Ações</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista"></tbody>
+                </table>
+            </div>
+            <p id="estado" class="estado">Carregando…</p>
+            <p class="aviso">
+                <strong>Atenção:</strong> a classificação pelo código é didática. O registro 1027 é um Notebook, mas
+                1027 mod 5 = 2 o coloca em "Cabos e periféricos". No aplicativo real, a categoria deve vir do tipo de
+                material informado pelo usuário.
+            </p>
+        </section>
+    </main>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
