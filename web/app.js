@@ -7,6 +7,7 @@ const CATEGORIAS = [
 ];
 
 const POR_PAGINA = 20;
+const CHAVE_SESSAO = "ecodescarte.sessao";
 
 const porNome = (a, b) => a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" });
 
@@ -21,6 +22,13 @@ const ORDENACOES = {
     "classe-asc": (a, b) => a.classe - b.classe || a.codigo - b.codigo,
 };
 
+const app = document.getElementById("app");
+const telaLogin = document.getElementById("login");
+const formLogin = document.getElementById("form-login");
+const loginErro = document.getElementById("login-erro");
+const barraSessao = document.getElementById("sessao");
+const sessaoUsuario = document.getElementById("sessao-usuario");
+const botaoSair = document.getElementById("sair");
 const form = document.getElementById("form-residuo");
 const campoCodigo = document.getElementById("codigo");
 const previa = document.getElementById("previa");
@@ -43,17 +51,85 @@ let destacado = null;
 let erroAoCarregar = null;
 let sumirMensagem;
 
+// { token, usuario } de quem está logado. Fica no navegador para não pedir a senha a cada recarga da página.
+let sessao = lerSessao();
+
+function lerSessao() {
+    try {
+        const salva = JSON.parse(localStorage.getItem(CHAVE_SESSAO));
+        return salva?.token ? salva : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function guardarSessao(nova) {
+    sessao = nova;
+    try {
+        if (nova) localStorage.setItem(CHAVE_SESSAO, JSON.stringify(nova));
+        else localStorage.removeItem(CHAVE_SESSAO);
+    } catch (e) {
+        // Sem acesso ao armazenamento (aba anônima, por exemplo) a sessão vale só até recarregar a página.
+    }
+}
+
+function mostrarApp() {
+    telaLogin.hidden = true;
+    app.hidden = false;
+    barraSessao.hidden = false;
+    sessaoUsuario.textContent = sessao.usuario;
+    rolagem.hidden = true;
+    rodapeLista.hidden = true;
+    total.hidden = true;
+    estado.hidden = false;
+    estado.textContent = "Carregando…";
+    carregar();
+}
+
+function mostrarLogin(aviso) {
+    if (confirmacao.open) confirmacao.close("cancelar");
+    app.hidden = true;
+    barraSessao.hidden = true;
+    mensagem.hidden = true;
+    telaLogin.hidden = false;
+    loginErro.textContent = aviso ?? "";
+    loginErro.hidden = !aviso;
+    formLogin.usuario.focus();
+}
+
+// Não deixa nenhum registro na página depois que a sessão acaba.
+function encerrarSessao(aviso) {
+    guardarSessao(null);
+    residuos = [];
+    lista.replaceChildren();
+    form.reset();
+    previa.hidden = true;
+    campoBusca.value = "";
+    pagina = 1;
+    mostrarLogin(aviso);
+}
+
 async function chamarApi(caminho, opcoes = {}) {
     let resposta;
     try {
         resposta = await fetch(window.API_URL + caminho, {
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                ...(sessao && { Authorization: `Bearer ${sessao.token}` }),
+            },
             ...opcoes,
         });
     } catch (e) {
         throw new Error("Não foi possível falar com a API. Ela está no ar?");
     }
     const corpo = resposta.status === 204 ? null : await resposta.json().catch(() => null);
+    // Um 401 fora do login quer dizer que o token venceu ou que a API reiniciou e esqueceu as sessões.
+    if (resposta.status === 401 && caminho !== "/api/login") {
+        encerrarSessao("Sua sessão expirou. Entre de novo.");
+        const erro = new Error("Sessão expirada.");
+        erro.sessaoExpirada = true;
+        throw erro;
+    }
     if (!resposta.ok) {
         throw new Error(corpo?.erro ?? "Algo deu errado. Tente de novo.");
     }
@@ -206,6 +282,7 @@ async function carregar() {
         residuos = await chamarApi("/api/residuos");
         erroAoCarregar = null;
     } catch (e) {
+        if (e.sessaoExpirada) return;
         // No plano gratuito do Render a API dorme quando fica sem uso e leva perto de um minuto para acordar.
         erroAoCarregar = e.message + " Se ela estava parada, pode levar até um minuto para acordar.";
     }
@@ -253,7 +330,7 @@ async function excluir(codigo) {
         mostrarMensagem(`Resíduo ${codigo} excluído.`, "sucesso");
         await carregar();
     } catch (e) {
-        mostrarMensagem(e.message, "erro");
+        if (!e.sessaoExpirada) mostrarMensagem(e.message, "erro");
     }
 }
 
@@ -298,10 +375,42 @@ form.addEventListener("submit", async (evento) => {
         await carregar();
         irAte(criado.codigo);
     } catch (e) {
-        mostrarMensagem(e.message, "erro");
+        if (!e.sessaoExpirada) mostrarMensagem(e.message, "erro");
     } finally {
         botao.disabled = false;
     }
 });
 
-carregar();
+formLogin.addEventListener("submit", async (evento) => {
+    evento.preventDefault();
+    const botao = formLogin.querySelector("button");
+    const pedido = { usuario: formLogin.usuario.value, senha: formLogin.senha.value };
+
+    botao.disabled = true;
+    loginErro.hidden = true;
+    try {
+        guardarSessao(await chamarApi("/api/login", { method: "POST", body: JSON.stringify(pedido) }));
+        formLogin.reset();
+        mostrarApp();
+    } catch (e) {
+        loginErro.textContent = e.message;
+        loginErro.hidden = false;
+        formLogin.senha.value = "";
+        formLogin.senha.focus();
+    } finally {
+        botao.disabled = false;
+    }
+});
+
+botaoSair.addEventListener("click", () => {
+    // Avisa a API para invalidar o token; se ela não responder, a sessão local é encerrada do mesmo jeito.
+    const token = sessao?.token;
+    encerrarSessao();
+    if (token) {
+        fetch(window.API_URL + "/api/logout", { method: "POST", headers: { Authorization: `Bearer ${token}` } })
+            .catch(() => {});
+    }
+});
+
+if (sessao) mostrarApp();
+else mostrarLogin();

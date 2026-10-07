@@ -108,6 +108,55 @@ main {
     padding-bottom: 96px;
 }
 
+/* Login e sessão */
+
+.sessao {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    font-size: 0.875rem;
+    color: var(--texto-suave);
+}
+
+.sessao strong {
+    color: var(--texto);
+}
+
+.sessao .botao {
+    padding: 5px 14px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.cartao.login {
+    width: min(380px, calc(100% - 32px));
+    margin: 28px auto 96px;
+    text-align: center;
+}
+
+.form-login {
+    display: grid;
+    gap: 14px;
+    margin-top: 20px;
+    text-align: left;
+}
+
+.form-login .botao {
+    margin-top: 4px;
+}
+
+.login-erro {
+    margin: 0;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    text-align: center;
+    color: var(--erro-forte);
+    background: var(--erro-suave);
+    border-radius: 10px;
+}
+
 .cartao {
     margin-top: 24px;
     padding: 24px;

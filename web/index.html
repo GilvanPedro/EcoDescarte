@@ -16,9 +16,30 @@
         </span>
         <h1>EcoDescarte</h1>
         <p>Cadastro e classificação de resíduos eletrônicos para descarte.</p>
+        <div id="sessao" class="sessao" hidden>
+            <span>Conectado como <strong id="sessao-usuario"></strong></span>
+            <button type="button" id="sair" class="botao secundario">Sair</button>
+        </div>
     </header>
 
-    <main>
+    <section id="login" class="cartao login" hidden>
+        <h2>Entrar</h2>
+        <p class="explicacao">Faça login para acessar os registros.</p>
+        <form id="form-login" class="form-login" novalidate>
+            <label>
+                Usuário
+                <input type="text" id="usuario" name="usuario" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+            </label>
+            <label>
+                Senha
+                <input type="password" id="senha" name="senha" autocomplete="current-password" required>
+            </label>
+            <p id="login-erro" class="login-erro" role="alert" hidden></p>
+            <button type="submit" class="botao primario">Entrar</button>
+        </form>
+    </section>
+
+    <main id="app" hidden>
         <section class="cartao">
             <h2>Cadastrar resíduo</h2>
             <form id="form-residuo" class="form-cadastro" novalidate>

@@ -1,9 +1,12 @@
 package br.com.ecodescarte.residuo;
 
+import br.com.ecodescarte.auth.Sessoes;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -23,9 +26,19 @@ class ResiduoControllerTest {
     @Autowired
     private MockMvc mvc;
 
+    @Autowired
+    private Sessoes sessoes;
+
+    private String autorizacao;
+
+    @BeforeEach
+    void entrar() {
+        autorizacao = "Bearer " + sessoes.abrir();
+    }
+
     @Test
     void comecaComPeloMenosDezRegistrosJaClassificados() throws Exception {
-        mvc.perform(get("/api/residuos"))
+        mvc.perform(get("/api/residuos").header(HttpHeaders.AUTHORIZATION, autorizacao))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(10))))
                 .andExpect(jsonPath("$[?(@.codigo == 1027)].classe").value(2))
@@ -37,22 +50,22 @@ class ResiduoControllerTest {
         String corpo = """
                 {"codigo": 7777, "nome": "Mouse", "quantidade": 3}""";
 
-        mvc.perform(post("/api/residuos").contentType(MediaType.APPLICATION_JSON).content(corpo))
+        mvc.perform(post("/api/residuos").header(HttpHeaders.AUTHORIZATION, autorizacao).contentType(MediaType.APPLICATION_JSON).content(corpo))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.classe").value(2))
                 .andExpect(jsonPath("$.categoria").value("Cabos e periféricos"));
 
-        mvc.perform(post("/api/residuos").contentType(MediaType.APPLICATION_JSON).content(corpo))
+        mvc.perform(post("/api/residuos").header(HttpHeaders.AUTHORIZATION, autorizacao).contentType(MediaType.APPLICATION_JSON).content(corpo))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.erro").exists());
 
-        mvc.perform(delete("/api/residuos/7777")).andExpect(status().isNoContent());
-        mvc.perform(delete("/api/residuos/7777")).andExpect(status().isNotFound());
+        mvc.perform(delete("/api/residuos/7777").header(HttpHeaders.AUTHORIZATION, autorizacao)).andExpect(status().isNoContent());
+        mvc.perform(delete("/api/residuos/7777").header(HttpHeaders.AUTHORIZATION, autorizacao)).andExpect(status().isNotFound());
     }
 
     @Test
     void recusaDadosInvalidos() throws Exception {
-        mvc.perform(post("/api/residuos").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/api/residuos").header(HttpHeaders.AUTHORIZATION, autorizacao).contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"codigo": 10, "nome": " ", "quantidade": 0}"""))
                 .andExpect(status().isBadRequest())
